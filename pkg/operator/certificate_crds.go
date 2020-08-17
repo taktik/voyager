@@ -91,6 +91,7 @@ func (op *Operator) initCertificateCRDWatcher() {
 }
 
 func (op *Operator) reconcileCertificate(key string) error {
+	glog.Infof("Reconciling certificate %s...", key)
 	obj, exists, err := op.crtInformer.GetIndexer().GetByKey(key)
 	if err != nil {
 		glog.Errorf("Fetching object with key %s from store failed with %v", key, err)
@@ -102,6 +103,13 @@ func (op *Operator) reconcileCertificate(key string) error {
 		glog.Infof("Sync/Add/Update for Certificate %s\n", key)
 
 		cert := obj.(*api.Certificate).DeepCopy()
+
+		isFresh := cert.CreationTimestamp.Time.After(time.Now().Add(-time.Minute*5))
+		if isFresh {
+			glog.Infof("Cert created 5 min ago (or less), skipping reconciliation (%+v)", cert.CreationTimestamp)
+			return nil
+		}
+
 		if cert.Spec.Paused {
 			glog.Infof("Skipping paused Certificate %s\n", key)
 			return nil
@@ -130,15 +138,18 @@ func (op *Operator) reconcileCertificate(key string) error {
 			cert.ObjectReference(),
 			core.EventTypeNormal,
 			eventer.EventReasonCertificateIssueSuccessful,
-			"Successfully issued certificate",
+			"Successfully issued certificate (reconcile) - useless log", // called once (at start, but after "renewed") ; and on all certs too, TODO SH remove this log, useless, meaningless
 		)
 	}
 	return nil
 }
 
 func (op *Operator) CheckCertificates() {
+	glog.Info("Checking certificates...") // x1 au début
 	Time := clock.New()
-	for range Time.After(time.Minute * 5) {
+	for {
+		<-Time.After(time.Minute * 5)
+		glog.Info("Inside checking certificates...")
 		result, err := op.crtLister.List(labels.Everything())
 		if err != nil {
 			log.Error(err)
@@ -193,5 +204,6 @@ func (op *Operator) CheckCertificates() {
 				)
 			}
 		}
+		glog.Info("Done checking certs, next iteration in 5 min")
 	}
 }

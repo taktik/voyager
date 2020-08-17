@@ -38,11 +38,11 @@ import (
 func NewCmdVoyager() *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:               "voyager [command]",
-		Short:             `Voyager by Appscode - Secure HAProxy Ingress Controller for Kubernetes`,
+		Short:             `Voyager by Appscode and Taktik! - Secure HAProxy Ingress Controller for Kubernetes`,
 		DisableAutoGenTag: true,
 		PersistentPreRun: func(c *cobra.Command, args []string) {
 			c.Flags().VisitAll(func(flag *pflag.Flag) {
-				log.Printf("FLAG: --%s=%q", flag.Name, flag.Value)
+				log.Printf("FLAG :  --%s=%q", flag.Name, flag.Value)
 			})
 			cli.SendAnalytics(c, v.Version.Version)
 

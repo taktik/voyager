@@ -83,10 +83,10 @@ def version():
 
 
 def fmt():
-    libbuild.ungroup_go_imports('*.go', 'apis', 'client', 'pkg', 'test', 'third_party')
-    die(call('goimports -w *.go apis client pkg test third_party'))
-    call('gofmt -s -w *.go apis client pkg test third_party')
-
+    # libbuild.ungroup_go_imports('*.go', 'apis', 'client', 'pkg', 'test', 'third_party')
+    # die(call('goimports -w *.go apis client pkg test third_party'))
+    # call('gofmt -s -w *.go apis client pkg test third_party')
+    print("fmt skipped")
 
 def vet():
     call('go vet *.go ./apis/... ./client/... ./pkg/... ./test/...')

@@ -163,13 +163,13 @@ func (c *Controller) Process() error {
 				c.crd.ObjectReference(),
 				core.EventTypeNormal,
 				eventer.EventReasonCertificateIssueSuccessful,
-				"Successfully issued certificate",
-			)
+				"Successfully issued certificate !")
 		}
 		return err
 	}
 
 	if c.crd.ShouldRenew(c.curCert) {
+		log.Infof("shouldRenew (%+v)", c.curCert.DNSNames)
 		err := c.renew()
 		if err == nil {
 			c.recorder.Eventf(
@@ -185,7 +185,7 @@ func (c *Controller) Process() error {
 					c.crd.ObjectReference(),
 					core.EventTypeNormal,
 					eventer.EventReasonCertificateIssueSuccessful,
-					"Successfully issued certificate",
+					"Successfully issued certificate.", // never called
 				)
 			}
 			return err
@@ -257,10 +257,13 @@ func (c *Controller) create() error {
 			return err
 		}
 	}
+	log.Infof("Trying to obtain certificate...")
 	cert, err := c.acmeClient.ObtainCertificate(c.crd.Spec.Domains, true, nil, false)
 	if err != nil {
+		log.Infof("Failed to obtain certificate: %s", err)
 		return c.processError(errors.Wrap(err, "failed to create certificate."))
 	}
+	log.Infof("Saving cert: %s / %s / %s / %s - %+v - %+v", cert.Domain, cert.CertURL, cert.CertStableURL, cert.AccountRef, c.crd.Status, c.crd.CreationTimestamp)
 	return c.store.Save(c.crd, cert)
 }
 

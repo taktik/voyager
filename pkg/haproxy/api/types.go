@@ -82,6 +82,8 @@ type SharedInfo struct {
 	UseNodePort           bool
 	Limit                 *Limit
 	HardStopAfter         string
+	LogsDestination       string
+	AllCookiesSecure      bool
 }
 
 type CORSConfig struct {

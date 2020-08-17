@@ -341,6 +341,8 @@ func (c *controller) generateConfig() error {
 			Connection: c.Ingress.LimitConnections(),
 		},
 		HardStopAfter: c.Ingress.HardStopAfter(),
+		LogsDestination: c.Ingress.LogsDestination(),
+		AllCookiesSecure: c.Ingress.AllCookiesSecure(),
 	}
 
 	if val := c.Ingress.LimitRPM(); val > 0 {

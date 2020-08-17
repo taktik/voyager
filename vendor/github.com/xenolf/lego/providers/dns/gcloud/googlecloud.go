@@ -157,6 +157,7 @@ func (d *DNSProvider) Present(domain, token, keyAuth string) error {
 	change := &dns.Change{}
 
 	if len(existing) > 0 {
+		fmt.Printf("TXT records already existing (%d)\n", len(existing))
 		// Attempt to delete the existing records when adding our new one.
 		change.Deletions = existing
 

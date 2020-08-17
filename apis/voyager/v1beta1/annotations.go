@@ -132,6 +132,12 @@ const (
 	HardStopAfter        = EngressKey + "/" + "hard-stop-after"
 	DefaultHardStopAfter = "30s"
 
+	// Defines an additional destination for logs of facility local0 and severity info (if not needed, leave undefined)
+	LogsDestination = EngressKey + "/logs-destination"
+
+	// Wheter or not all cookies should be set as secure in http-frontend.cfg (defaults to false for Taktik)
+	AllCookiesSecure = EngressKey + "/all-cookies-secure"
+
 	// https://github.com/voyagermesh/voyager/issues/343
 	// Supports all valid options for defaults section of HAProxy config
 	// https://cbonte.github.io/haproxy-dconv/1.7/configuration.html#4.2-option%20abortonclose
@@ -313,6 +319,8 @@ func init() {
 	registerParser(AuthTLSErrorPage, meta.GetString)
 	registerParser(ErrorFiles, meta.GetString)
 	registerParser(HardStopAfter, meta.GetString)
+	registerParser(LogsDestination, meta.GetString)
+	registerParser(AllCookiesSecure, meta.GetBool)
 	registerParser(CORSEnabled, meta.GetBool)
 	registerParser(UseNodePort, meta.GetBool)
 	registerParser(EnableHSTS, meta.GetBool)
@@ -813,4 +821,16 @@ func (r Ingress) HardStopAfter() string {
 		return v.(string)
 	}
 	return DefaultHardStopAfter
+}
+
+func (r Ingress) LogsDestination() string {
+	value, _ := get[LogsDestination](r.Annotations)
+	return value.(string)
+}
+
+func (r Ingress) AllCookiesSecure() bool {
+	if v, err := get[AllCookiesSecure](r.Annotations); err == nil {
+		return v.(bool)
+	}
+	return false // default value
 }

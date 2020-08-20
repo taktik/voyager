@@ -634,14 +634,14 @@ qa:
 
 .PHONY: release
 release:
-	@if [ "$$APPSCODE_ENV" != "prod" ]; then      \
-		echo "'release' only works in PROD env."; \
-		exit 1;                                   \
-	fi
-	@if [ "$(version_strategy)" != "tag" ]; then                    \
-		echo "apply tag to release binaries and/or docker images."; \
-		exit 1;                                                     \
-	fi
+# 	@if [ "$$APPSCODE_ENV" != "prod" ]; then      \
+# 		echo "'release' only works in PROD env."; \
+# 		exit 1;                                   \
+# 	fi
+# 	@if [ "$(version_strategy)" != "tag" ]; then                    \
+# 		echo "apply tag to release binaries and/or docker images."; \
+# 		exit 1;                                                     \
+# 	fi
 	@$(MAKE) clean all-push docker-manifest all-haproxy-push haproxy-manifest --no-print-directory
 
 .PHONY: clean

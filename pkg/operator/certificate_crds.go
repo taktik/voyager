@@ -103,13 +103,6 @@ func (op *Operator) reconcileCertificate(key string) error {
 		glog.Infof("Sync/Add/Update for Certificate %s\n", key)
 
 		cert := obj.(*api.Certificate).DeepCopy()
-
-		isFresh := cert.CreationTimestamp.Time.After(time.Now().Add(-time.Minute*5))
-		if isFresh {
-			glog.Infof("Cert created 5 min ago (or less), skipping reconciliation (%+v)", cert.CreationTimestamp)
-			return nil
-		}
-
 		if cert.Spec.Paused {
 			glog.Infof("Skipping paused Certificate %s\n", key)
 			return nil
@@ -133,19 +126,12 @@ func (op *Operator) reconcileCertificate(key string) error {
 			)
 			return err
 		}
-
-		op.recorder.Eventf(
-			cert.ObjectReference(),
-			core.EventTypeNormal,
-			eventer.EventReasonCertificateIssueSuccessful,
-			"Successfully issued certificate (reconcile) - useless log", // called once (at start, but after "renewed") ; and on all certs too, TODO SH remove this log, useless, meaningless
-		)
 	}
 	return nil
 }
 
 func (op *Operator) CheckCertificates() {
-	glog.Info("Checking certificates...") // x1 au début
+	glog.Info("Checking certificates...")
 	Time := clock.New()
 	for {
 		<-Time.After(time.Minute * 5)
@@ -159,6 +145,12 @@ func (op *Operator) CheckCertificates() {
 			cert := result[i]
 			if cert.Spec.Paused {
 				glog.Infof("Skipping paused Certificate %s/%s", cert.Namespace, cert.Name)
+				continue
+			}
+
+			isFresh := cert.CreationTimestamp.Time.After(time.Now().Add(-time.Minute*5))
+			if isFresh {
+				glog.Infof("Cert %s created 5 min ago (or less), skipping reconciliation (%+v)", cert.Name, cert.CreationTimestamp)
 				continue
 			}
 

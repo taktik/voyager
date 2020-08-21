@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/xenolf/lego/acme"
@@ -135,7 +136,7 @@ func NewDNSProviderConfig(config *Config) (*DNSProvider, error) {
 // Present creates a TXT record to fulfill the dns-01 challenge.
 func (d *DNSProvider) Present(domain, token, keyAuth string) error {
 	fqdn, value, _ := acme.DNS01Record(domain, keyAuth)
-
+	fmt.Printf("Presenting TXT record %s for domain %s\n", value, fqdn)
 	zone, err := d.getHostedZone(domain)
 	if err != nil {
 		return fmt.Errorf("googlecloud: %v", err)
@@ -147,6 +148,39 @@ func (d *DNSProvider) Present(domain, token, keyAuth string) error {
 		return fmt.Errorf("googlecloud: %v", err)
 	}
 
+	for _, rrSet := range existing {
+		var rrd []string
+		for _, rr := range rrSet.Rrdatas {
+			data := mustUnquote(rr)
+			rrd = append(rrd, data)
+
+			if data == value {
+				fmt.Printf("skip: the record already exists: %s", value)
+				return nil
+			}
+		}
+		rrSet.Rrdatas = rrd
+	}
+
+	// Attempt to delete the existing records before adding the new one.
+	if len(existing) > 0 {
+		fmt.Printf("Found existing TXT records: %+v\n", existing)
+		chg, err := d.client.Changes.Create(d.config.Project, zone, &dns.Change{Deletions: existing}).Do()
+		if err != nil {
+			return fmt.Errorf("googlecloud: %v", err)
+		}
+
+		// wait for change to be acknowledged
+		for chg.Status == "pending" {
+			time.Sleep(time.Second)
+
+			chg, err = d.client.Changes.Get(d.config.Project, zone, chg.Id).Do()
+			if err != nil {
+				return fmt.Errorf("googlecloud: %v", err)
+			}
+		}
+	}
+
 	rec := &dns.ResourceRecordSet{
 		Name:    fqdn,
 		Rrdatas: []string{value},
@@ -154,20 +188,19 @@ func (d *DNSProvider) Present(domain, token, keyAuth string) error {
 		Type:    "TXT",
 	}
 
-	change := &dns.Change{}
-
-	if len(existing) > 0 {
-		fmt.Printf("TXT records already existing (%d)\n", len(existing))
-		// Attempt to delete the existing records when adding our new one.
-		change.Deletions = existing
-
-		// Append existing TXT record data to the new TXT record data
-		for _, value := range existing {
-			rec.Rrdatas = append(rec.Rrdatas, value.Rrdatas...)
+	// Append existing TXT record data to the new TXT record data
+	for _, rrSet := range existing {
+		for _, rr := range rrSet.Rrdatas {
+			if rr != value {
+				rec.Rrdatas = append(rec.Rrdatas, rr)
+			}
 		}
 	}
 
-	change.Additions = []*dns.ResourceRecordSet{rec}
+	change := &dns.Change{
+		Additions: []*dns.ResourceRecordSet{rec},
+	}
+	fmt.Printf("Adding following TXT records: %+v\n", rec.Rrdatas)
 
 	chg, err := d.client.Changes.Create(d.config.Project, zone, change).Do()
 	if err != nil {
@@ -247,4 +280,12 @@ func (d *DNSProvider) findTxtRecords(zone, fqdn string) ([]*dns.ResourceRecordSe
 	}
 
 	return recs.Rrsets, nil
+}
+
+func mustUnquote(raw string) string {
+	clean, err := strconv.Unquote(raw)
+	if err != nil {
+		return raw
+	}
+	return clean
 }

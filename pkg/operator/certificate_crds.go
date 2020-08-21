@@ -150,7 +150,7 @@ func (op *Operator) CheckCertificates() {
 
 			isFresh := cert.CreationTimestamp.Time.After(time.Now().Add(-time.Minute*5))
 			if isFresh {
-				glog.Infof("Cert %s created 5 min ago (or less), skipping reconciliation (%+v)", cert.Name, cert.CreationTimestamp)
+				glog.Infof("Cert %s created less than 5 min ago, skipping check (%+v)", cert.Name, cert.CreationTimestamp)
 				continue
 			}
 

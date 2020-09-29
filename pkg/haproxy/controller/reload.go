@@ -18,9 +18,12 @@ package controller
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"strconv"
+	"strings"
+	"sync"
 
 	"github.com/golang/glog"
 	ps "github.com/mitchellh/go-ps"
@@ -33,7 +36,10 @@ const (
 	haproxySocket = "/var/run/haproxy.sock"
 )
 
+var haproxyDaemonMux sync.Mutex
+
 func getHAProxyPid() (int, error) {
+	checkDirectory()
 	file, err := os.Open(haproxyPID)
 	if err != nil {
 		return 0, err
@@ -43,6 +49,34 @@ func getHAProxyPid() (int, error) {
 	var pid int
 	_, err = fmt.Fscan(file, &pid)
 	return pid, err
+}
+
+func checkDirectory() {
+	s := "/var/run: "
+	if files, err := ioutil.ReadDir("/var/run"); err != nil {
+		glog.Error("Error during ls /var/run: " + err.Error())
+	} else {
+		for _, file := range files {
+			s += file.Name() + " (" + strconv.FormatInt(file.Size(), 10) + ") - "
+		}
+		content, err := ioutil.ReadFile("/var/run/haproxy.pid")
+		if err != nil {
+			glog.Error("Error during cat /var/run/haproxy.pid: " + err.Error())
+		} else {
+			s += "haproxy.pid: " + string(content)
+		}
+		processes, err := ps.Processes()
+		if err != nil {
+			glog.Error("Error during ps: " + err.Error())
+		} else {
+			for _, p := range processes {
+				if strings.Contains(strings.ToLower(p.Executable()), "haproxy") {
+					s += " -> " + strconv.Itoa(p.Pid()) + " " + p.Executable()
+				}
+			}
+		}
+		glog.Info(s)
+	}
 }
 
 func checkHAProxyDaemon() (int, error) {
@@ -83,6 +117,7 @@ func startHAProxy() error {
 	}
 
 	glog.Infof("haproxy started: %s", string(output))
+	checkDirectory()
 	return nil
 }
 
@@ -104,14 +139,31 @@ func reloadHAProxy(pid int) error {
 	}
 
 	glog.Infof("haproxy reloaded: %s", string(output))
+	checkDirectory()
 	return nil
 }
 
 // reload if old haproxy daemon exists, otherwise start
 func startOrReloadHaproxy() error {
+	glog.Info("startOrReloadHaproxy: locking...")
+	haproxyDaemonMux.Lock()
+	glog.Info("startOrReloadHaproxy: locked!")
+	defer haproxyDaemonMux.Unlock()
 	if pid, err := checkHAProxyDaemon(); err != nil {
 		return startHAProxy()
 	} else {
 		return reloadHAProxy(pid)
+	}
+}
+
+// start haproxy if daemon doesn't exist, otherwise do nothing
+func startHaproxyIfNeeded() {
+	haproxyDaemonMux.Lock()
+	defer haproxyDaemonMux.Unlock()
+	if _, err := checkHAProxyDaemon(); err != nil {
+		glog.Error(err)
+		if err = startHAProxy(); err != nil {
+			glog.Error(err)
+		}
 	}
 }

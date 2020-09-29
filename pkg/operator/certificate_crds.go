@@ -19,7 +19,6 @@ package operator
 import (
 	"reflect"
 	"time"
-
 	api "voyagermesh.dev/voyager/apis/voyager/v1beta1"
 	"voyagermesh.dev/voyager/pkg/certificate"
 	"voyagermesh.dev/voyager/pkg/eventer"

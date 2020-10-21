@@ -301,6 +301,7 @@ type tcpInfo struct {
 	ALPNOptions string
 	Proto       string
 	Hosts       []*hpi.TCPHost
+	TcpPortRange string
 }
 
 func (c *controller) generateConfig() error {
@@ -596,6 +597,7 @@ func (c *controller) generateConfig() error {
 				info.Hosts = append(info.Hosts, tcpHost)
 				info.ALPNOptions = rule.ParseALPNOptions()
 				info.Proto = rule.TCP.Proto
+				info.TcpPortRange = rule.TCP.TcpPortRange
 
 				if c.Ingress.UseTLSForRule(rule) {
 					info.OffloadSSL = true
@@ -747,6 +749,7 @@ func (c *controller) generateConfig() error {
 			Proto:         info.Proto,
 			OffloadSSL:    info.OffloadSSL,
 			Hosts:         info.Hosts,
+			TcpPortRange:  info.TcpPortRange,
 		}
 
 		if globalTLS != nil {

@@ -320,6 +320,9 @@ type TCPIngressRuleValue struct {
 	// If the Proto contains "h2",  "option http-use-htx" will be added to enable HTX mode
 	// https://www.haproxy.com/blog/haproxy-1-9-2-adds-grpc-support/
 	Proto string `json:"proto,omitempty"`
+
+	// Additional port range to bind
+	TcpPortRange string `json:"tcpPortRange,omitempty"`
 }
 
 // HTTPIngressPath associates a path regex with a backend. Incoming urls matching

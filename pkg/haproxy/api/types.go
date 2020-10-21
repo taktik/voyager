@@ -170,6 +170,7 @@ type TCPService struct {
 	Proto         string
 	TLSAuth       *TLSAuth
 	Hosts         []*TCPHost
+	TcpPortRange  string
 }
 
 func (svc TCPService) sortKey() string {

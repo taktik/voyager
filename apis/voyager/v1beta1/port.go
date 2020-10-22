@@ -16,8 +16,11 @@ limitations under the License.
 package v1beta1
 
 import (
+	"github.com/golang/glog"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"strconv"
+	"strings"
 )
 
 type Target struct {
@@ -53,6 +56,18 @@ func (r Ingress) PortMappings(cloudProvider string) (map[int]Target, error) {
 			mappings[rule.TCP.Port.IntValue()] = Target{
 				PodPort:  rule.TCP.Port.IntValue(),
 				NodePort: rule.TCP.NodePort.IntValue(),
+			}
+			if portRange := strings.Split(rule.TCP.TcpPortRange, "-"); len(portRange) == 2 {
+				if from, err := strconv.Atoi(portRange[0]); err == nil && from > 0 {
+					if to, err := strconv.Atoi(portRange[1]); err == nil && to > 0 && from <= to {
+						for i := from ; i <= to ; i++ {
+							mappings[i] = Target{
+								PodPort:  i,
+								NodePort: rule.TCP.NodePort.IntValue(),
+							}						}
+						glog.Infof("Opened range %d:%d on Voyager service", from, to)
+					}
+				}
 			}
 		}
 	}
@@ -107,6 +122,16 @@ func (r Ingress) PodPorts() []int {
 		} else if rule.TCP != nil {
 			if port := rule.TCP.Port.IntValue(); port > 0 {
 				ports.Insert(port)
+			}
+			if portRange := strings.Split(rule.TCP.TcpPortRange, "-"); len(portRange) == 2 {
+				if from, err := strconv.Atoi(portRange[0]); err == nil && from > 0 {
+					if to, err := strconv.Atoi(portRange[1]); err == nil && to > 0 && from <= to {
+						for i := from ; i <= to ; i++ {
+							ports.Insert(i)
+						}
+						glog.Infof("Opened range %d:%d on Voyager pod", from, to)
+					}
+				}
 			}
 		}
 	}

@@ -344,6 +344,7 @@ func (c *controller) generateConfig() error {
 		HardStopAfter: c.Ingress.HardStopAfter(),
 		LogsDestination: c.Ingress.LogsDestination(),
 		AllCookiesSecure: c.Ingress.AllCookiesSecure(),
+		AdditionalCiphers: c.Ingress.AdditionalCiphers(),
 	}
 
 	if val := c.Ingress.LimitRPM(); val > 0 {

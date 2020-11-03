@@ -138,6 +138,9 @@ const (
 	// Wheter or not all cookies should be set as secure in http-frontend.cfg (defaults to false for Taktik)
 	AllCookiesSecure = EngressKey + "/all-cookies-secure"
 
+	// Additional cipher(s) to add to the ssl-default-bind-ciphers global setting. Don't put leading or trailing ":", but put it between two ciphers if you use more than one.
+	AdditionalCiphers = EngressKey + "/additional-ciphers"
+
 	// https://github.com/voyagermesh/voyager/issues/343
 	// Supports all valid options for defaults section of HAProxy config
 	// https://cbonte.github.io/haproxy-dconv/1.7/configuration.html#4.2-option%20abortonclose
@@ -321,6 +324,7 @@ func init() {
 	registerParser(HardStopAfter, meta.GetString)
 	registerParser(LogsDestination, meta.GetString)
 	registerParser(AllCookiesSecure, meta.GetBool)
+	registerParser(AdditionalCiphers, meta.GetString)
 	registerParser(CORSEnabled, meta.GetBool)
 	registerParser(UseNodePort, meta.GetBool)
 	registerParser(EnableHSTS, meta.GetBool)
@@ -833,4 +837,9 @@ func (r Ingress) AllCookiesSecure() bool {
 		return v.(bool)
 	}
 	return false // default value
+}
+
+func (r Ingress) AdditionalCiphers() string {
+	value, _ := get[AdditionalCiphers](r.Annotations)
+	return value.(string)
 }

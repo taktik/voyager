@@ -375,7 +375,6 @@ bin/.container-$(DOTFILE_IMAGE)-%: bin/$(OS)_$(ARCH)/$(BIN) $(DOCKERFILE_%)
 
 push: bin/.push-$(DOTFILE_IMAGE)-PROD bin/.push-$(DOTFILE_IMAGE)-DBG
 bin/.push-$(DOTFILE_IMAGE)-%: bin/.container-$(DOTFILE_IMAGE)-%
-	@docker push $(IMAGE):$(TAG_$*)
 	@echo "pushed: $(IMAGE):$(TAG_$*)"
 	@echo
 
@@ -404,7 +403,6 @@ bin/.container-$(DOTFILE_HAPROXY)-%: bin/.container-$(DOTFILE_IMAGE)-PROD
 
 haproxy-push: bin/.push-$(DOTFILE_HAPROXY)-DEB bin/.push-$(DOTFILE_HAPROXY)-ALP
 bin/.push-$(DOTFILE_HAPROXY)-%: bin/.container-$(DOTFILE_HAPROXY)-%
-	@docker push $(REGISTRY)/haproxy:$(TAG_HAPROXY_$*)
 	@echo "pushed: $(REGISTRY)/haproxy:$(TAG_HAPROXY_$*)"
 	@echo
 

@@ -344,7 +344,9 @@ func (c *controller) generateConfig() error {
 		HardStopAfter: c.Ingress.HardStopAfter(),
 		LogsDestination: c.Ingress.LogsDestination(),
 		AllCookiesSecure: c.Ingress.AllCookiesSecure(),
-		AdditionalCiphers: c.Ingress.AdditionalCiphers(),
+		SslDefaultBindCiphers: c.Ingress.SslDefaultBindCiphers(),
+		SslDefaultBindOptions: c.Ingress.SslDefaultBindOptions(),
+		AdditionalGlobal: c.Ingress.AdditionalGlobal(),
 	}
 
 	if val := c.Ingress.LimitRPM(); val > 0 {

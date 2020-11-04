@@ -84,7 +84,9 @@ type SharedInfo struct {
 	HardStopAfter         string
 	LogsDestination       string
 	AllCookiesSecure      bool
-	AdditionalCiphers     string
+	SslDefaultBindCiphers string
+	SslDefaultBindOptions string
+	AdditionalGlobal      string
 }
 
 type CORSConfig struct {

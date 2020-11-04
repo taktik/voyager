@@ -135,11 +135,17 @@ const (
 	// Defines an additional destination for logs of facility local0 and severity info (if not needed, leave undefined)
 	LogsDestination = EngressKey + "/logs-destination"
 
-	// Wheter or not all cookies should be set as secure in http-frontend.cfg (defaults to false for Taktik)
+	// Whether or not all cookies should be set as secure in http-frontend.cfg (defaults to false for Taktik)
 	AllCookiesSecure = EngressKey + "/all-cookies-secure"
 
-	// Additional cipher(s) to add to the ssl-default-bind-ciphers global setting. Don't put leading or trailing ":", but put it between two ciphers if you use more than one.
-	AdditionalCiphers = EngressKey + "/additional-ciphers"
+	// Override ssl-default-bind-ciphers
+	SslDefaultBindCiphers = EngressKey + "/ssl-default-bind-ciphers"
+
+	// Override ssl-default-bind-options
+	SslDefaultBindOptions = EngressKey + "/ssl-default-bind-options"
+
+	// Additional config in the global section
+	AdditionalGlobal = EngressKey + "/additional-global"
 
 	// https://github.com/voyagermesh/voyager/issues/343
 	// Supports all valid options for defaults section of HAProxy config
@@ -324,7 +330,9 @@ func init() {
 	registerParser(HardStopAfter, meta.GetString)
 	registerParser(LogsDestination, meta.GetString)
 	registerParser(AllCookiesSecure, meta.GetBool)
-	registerParser(AdditionalCiphers, meta.GetString)
+	registerParser(SslDefaultBindCiphers, meta.GetString)
+	registerParser(SslDefaultBindOptions, meta.GetString)
+	registerParser(AdditionalGlobal, meta.GetString)
 	registerParser(CORSEnabled, meta.GetBool)
 	registerParser(UseNodePort, meta.GetBool)
 	registerParser(EnableHSTS, meta.GetBool)
@@ -839,7 +847,17 @@ func (r Ingress) AllCookiesSecure() bool {
 	return false // default value
 }
 
-func (r Ingress) AdditionalCiphers() string {
-	value, _ := get[AdditionalCiphers](r.Annotations)
+func (r Ingress) SslDefaultBindCiphers() string {
+	value, _ := get[SslDefaultBindCiphers](r.Annotations)
+	return value.(string)
+}
+
+func (r Ingress) SslDefaultBindOptions() string {
+	value, _ := get[SslDefaultBindOptions](r.Annotations)
+	return value.(string)
+}
+
+func (r Ingress) AdditionalGlobal() string {
+	value, _ := get[AdditionalGlobal](r.Annotations)
 	return value.(string)
 }

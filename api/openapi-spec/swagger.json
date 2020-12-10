@@ -2816,6 +2816,10 @@
         "proto": {
           "description": "HTTP protocol to use If the Proto contains \"h2\",  \"option http-use-htx\" will be added to enable HTX mode https://www.haproxy.com/blog/haproxy-1-9-2-adds-grpc-support/",
           "type": "string"
+        },
+        "tcpPortRange": {
+          "description": "Additional port range to bind",
+          "type": "string"
         }
       }
     },

@@ -17239,6 +17239,13 @@ func schema_voyager_apis_voyager_v1beta1_TCPIngressRuleValue(ref common.Referenc
 							Format:      "",
 						},
 					},
+					"tcpPortRange": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Additional port range to bind",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 				},
 			},
 		},
